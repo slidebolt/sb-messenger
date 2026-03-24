@@ -4,9 +4,9 @@ go 1.26.1
 
 require (
 	github.com/nats-io/nats-server/v2 v2.12.5
-	github.com/slidebolt/sb-contract v1.0.0
-	github.com/slidebolt/sb-messenger-sdk v1.0.0
-	github.com/slidebolt/sb-runtime v1.0.0
+	github.com/slidebolt/sb-contract v1.0.2
+	github.com/slidebolt/sb-messenger-sdk v1.0.2
+	github.com/slidebolt/sb-runtime v1.0.2
 )
 
 require (
