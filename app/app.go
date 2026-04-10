@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
+	"strconv"
 
 	contract "github.com/slidebolt/sb-contract"
 
@@ -29,13 +31,28 @@ func (a *App) Hello() contract.HelloResponse {
 }
 
 func (a *App) OnStart(deps map[string]json.RawMessage) (json.RawMessage, error) {
-	port, err := freePort()
-	if err != nil {
-		return nil, fmt.Errorf("find free port: %w", err)
+	host := os.Getenv("SB_MESSENGER_HOST")
+	if host == "" {
+		host = "127.0.0.1"
+	}
+
+	var port int
+	var err error
+	portStr := os.Getenv("SB_MESSENGER_PORT")
+	if portStr != "" {
+		port, err = strconv.Atoi(portStr)
+		if err != nil {
+			return nil, fmt.Errorf("parse SB_MESSENGER_PORT: %w", err)
+		}
+	} else {
+		port, err = freePort()
+		if err != nil {
+			return nil, fmt.Errorf("find free port: %w", err)
+		}
 	}
 
 	opts := &natsserver.Options{
-		Host: "127.0.0.1",
+		Host: host,
 		Port: port,
 	}
 
@@ -52,10 +69,10 @@ func (a *App) OnStart(deps map[string]json.RawMessage) (json.RawMessage, error) 
 	a.server = ns
 	a.port = port
 
-	log.Printf("nats server listening on 127.0.0.1:%d", port)
+	log.Printf("nats server listening on %s:%d", host, port)
 
 	payload, _ := json.Marshal(map[string]any{
-		"nats_url":  "127.0.0.1",
+		"nats_url":  host,
 		"nats_port": port,
 	})
 
