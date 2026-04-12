@@ -2,6 +2,8 @@ package app
 
 import (
 	"encoding/json"
+	"io"
+	"net/http"
 	"testing"
 	"time"
 
@@ -55,5 +57,45 @@ func TestOnStartStartsReachableNATSServer(t *testing.T) {
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("timed out waiting for pubsub")
+	}
+}
+
+func TestOnStartStartsMonitorWhenConfigured(t *testing.T) {
+	t.Setenv("SB_MESSENGER_MONITOR_HOST", "127.0.0.1")
+	t.Setenv("SB_MESSENGER_MONITOR_PORT", "18222")
+
+	m := New()
+
+	payload, err := m.OnStart(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer m.OnShutdown()
+
+	var info struct {
+		MonitorHost string `json:"nats_monitor_host"`
+		MonitorPort int    `json:"nats_monitor_port"`
+	}
+	if err := json.Unmarshal(payload, &info); err != nil {
+		t.Fatal(err)
+	}
+	if info.MonitorHost != "127.0.0.1" || info.MonitorPort != 18222 {
+		t.Fatalf("monitor payload: got host=%q port=%d", info.MonitorHost, info.MonitorPort)
+	}
+
+	resp, err := http.Get("http://127.0.0.1:18222/varz")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status: got %d want %d", resp.StatusCode, http.StatusOK)
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(body) == 0 {
+		t.Fatal("empty varz response")
 	}
 }

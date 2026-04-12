@@ -51,9 +51,27 @@ func (a *App) OnStart(deps map[string]json.RawMessage) (json.RawMessage, error) 
 		}
 	}
 
+	monitorHost := os.Getenv("SB_MESSENGER_MONITOR_HOST")
+	if monitorHost == "" {
+		monitorHost = "127.0.0.1"
+	}
+
+	monitorPort := 0
+	monitorPortStr := os.Getenv("SB_MESSENGER_MONITOR_PORT")
+	if monitorPortStr != "" {
+		monitorPort, err = strconv.Atoi(monitorPortStr)
+		if err != nil {
+			return nil, fmt.Errorf("parse SB_MESSENGER_MONITOR_PORT: %w", err)
+		}
+	}
+
 	opts := &natsserver.Options{
 		Host: host,
 		Port: port,
+	}
+	if monitorPort != 0 {
+		opts.HTTPHost = monitorHost
+		opts.HTTPPort = monitorPort
 	}
 
 	ns, err := natsserver.NewServer(opts)
@@ -70,10 +88,15 @@ func (a *App) OnStart(deps map[string]json.RawMessage) (json.RawMessage, error) 
 	a.port = port
 
 	log.Printf("nats server listening on %s:%d", host, port)
+	if monitorPort != 0 {
+		log.Printf("nats monitor listening on %s:%d", monitorHost, monitorPort)
+	}
 
 	payload, _ := json.Marshal(map[string]any{
-		"nats_url":  host,
-		"nats_port": port,
+		"nats_url":          host,
+		"nats_port":         port,
+		"nats_monitor_host": monitorHost,
+		"nats_monitor_port": monitorPort,
 	})
 
 	return payload, nil
