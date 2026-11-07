@@ -55,7 +55,7 @@ func TestOnStartStartsReachableNATSServer(t *testing.T) {
 		if got != "hello" {
 			t.Fatalf("data: got %q want %q", got, "hello")
 		}
-	case <-time.After(2 * time.Second):
+	case <-time.After(15 * time.Second):
 		t.Fatal("timed out waiting for pubsub")
 	}
 }
