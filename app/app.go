@@ -27,6 +27,12 @@ func (a *App) Hello() contract.HelloResponse {
 		ID:              "messenger",
 		Kind:            contract.KindService,
 		ContractVersion: contract.ContractVersion,
+		Setup: contract.RequiredSetup("Core",
+			contract.SetupField{Key: "host", Environment: "SB_MESSENGER_HOST", Name: "Bind host", Control: contract.SetupText, Default: json.RawMessage(`"127.0.0.1"`), Advanced: true},
+			contract.SetupField{Key: "port", Environment: "SB_MESSENGER_PORT", Name: "Bind port", Control: contract.SetupText, Format: "integer", Advanced: true},
+			contract.SetupField{Key: "monitorHost", Environment: "SB_MESSENGER_MONITOR_HOST", Name: "Monitor host", Control: contract.SetupText, Default: json.RawMessage(`"127.0.0.1"`), Advanced: true},
+			contract.SetupField{Key: "monitorPort", Environment: "SB_MESSENGER_MONITOR_PORT", Name: "Monitor port", Control: contract.SetupText, Format: "integer", Advanced: true},
+		),
 	}
 }
 
